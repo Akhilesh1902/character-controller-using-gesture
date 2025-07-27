@@ -16,13 +16,14 @@ import {
 import yoo from './img/yoo.png';
 import point from './img/point.png';
 import palm from './img/palm.png';
-import { Link } from 'react-router-dom';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
+// import useCharacter from './useCharacter';
+import playerInput from './CSM/BCCI';
 
 export default function VideoStream() {
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
-
+  // const { character, controls, walk, run, jump } = useCharacter('cop.glb');
   const [emoji, setEmoji] = useState(null);
   const images = {
     thumbs_up: thumbs_up,
@@ -78,6 +79,7 @@ export default function VideoStream() {
         ]);
 
         const gesture = GE ? await GE.estimate(hand[0].landmarks, 8) : '';
+        // console.log(gesture);
         if (gesture.gestures !== undefined && gesture.gestures.length > 0) {
           const confidence = gesture.gestures.map(
             (prediction) => prediction.score
@@ -86,8 +88,45 @@ export default function VideoStream() {
             Math.max.apply(null, confidence)
           );
           setEmoji(gesture.gestures[maxConfidence].name);
-          // console.log(emoji);
+          const left = hand[0].landmarks[0][0] < 200;
+          const right = hand[0].landmarks[0][0] > 400;
+          // console.log({ left, right, ld: hand[0].landmarks[0][0] });
+          // console.log(
+          //   gesture.gestures[maxConfidence].name,
+          //   hand[0].landmarks[0][0] < 300
+          // );
+          const gestureName = gesture.gestures[maxConfidence].name;
+          // console.log(gestureName);
+
+          let keyCode;
+          if (gestureName === 'palm') {
+            keyCode = 87;
+          } else if (gestureName === 'victory') {
+            keyCode = 83;
+          } else {
+            keyCode = 0;
+          }
+
+          // console.log({ keyCode, gestureName });
+
+          playerInput._onKeyDown({ keyCode });
+          playerInput._onSetDirection({
+            forward: gestureName === 'palm' ? true : false,
+            left: left,
+            right: right,
+            backward: gestureName === 'victory' ? true : false,
+          });
+
+          // console.log(playerInput._keys);
         }
+      } else {
+        playerInput._onKeyDown({ keyCode: 0 });
+        playerInput._onSetDirection({
+          forward: false,
+          left: false,
+          right: false,
+          backwad: false,
+        });
       }
 
       // draw mesh
@@ -101,70 +140,62 @@ export default function VideoStream() {
   }, []);
 
   return (
-    <div className='App'>
-      <Link
-        style={{ padding: '10px 36px' }}
-        to='/'
-        className='backArrow'>
-        <i className='bx bx-arrow-back'></i>
-      </Link>
-      <div className='app_container'>
-        <ToastContainer />
-        <div className='CanvasContainer'></div>
-        <div className='videoContainer'>
-          <header className='App-header'>
-            {emoji !== null ? (
-              <img
-                className='emojiHolder'
-                src={images[emoji]}
-                alt='emoji'
-                style={{
-                  // marginLeft: 'auto',
-                  // marginRight: 'auto',
-                  // left : 400,
-                  // bottom : 500,
-                  zIndex: 150,
-                  // padding: '8rem',
-                  // right: 0,
-                  // textAlign: 'center',
-                  // height: 100,
-                }}
-              />
-            ) : (
-              ''
-            )}
+    <div className='videoContainer'>
+      <header className='App-header'>
+        {emoji !== null ? (
+          <img
+            className='emojiHolder'
+            src={images[emoji]}
+            alt='emoji'
+            style={{
+              // marginLeft: 'auto',
+              // marginRight: 'auto',
+              // left : 400,
+              // bottom : 500,
+              zIndex: 150,
+              // padding: '8rem',
+              // right: 0,
+              // textAlign: 'center',
+              // height: 100,
+            }}
+          />
+        ) : (
+          ''
+        )}
 
-            <WebCam
-              ref={webcamRef}
-              style={{
-                position: 'absolute',
-                marginLeft: 'auto',
-                marginRight: 'auto',
-                left: 0,
-                right: 0,
-                textAlign: 'center',
-                zIndex: 9,
-                // width: 640,
-                // height: 480,
-              }}
-            />
-            <canvas
-              ref={canvasRef}
-              style={{
-                position: 'absolute',
-                marginLeft: 'auto',
-                marginRight: 'auto',
-                left: 0,
-                right: 0,
-                textAlign: 'center',
-                zIndex: 9,
-                // width: 640,
-                // height: 480,
-              }}
-            />
-          </header>
-        </div>
-      </div>
+        <WebCam
+          ref={webcamRef}
+          style={{
+            position: 'absolute',
+            marginLeft: 'auto',
+            marginRight: 'auto',
+            left: 0,
+            right: 0,
+            textAlign: 'center',
+            zIndex: 9,
+            transform: 'rotateY(180deg)',
+            // width: 640,
+            // height: 480,
+          }}
+        />
+        <canvas
+          ref={canvasRef}
+          id='video_canvas'
+          style={{
+            position: 'absolute',
+            marginLeft: 'auto',
+            marginRight: 'auto',
+            left: 0,
+            right: 0,
+            textAlign: 'center',
+            zIndex: 9,
+            transform: 'rotateY(180deg)',
+
+            // width: 640,
+            // height: 480,
+          }}
+        />
+      </header>
     </div>
   );
 }
