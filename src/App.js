@@ -14,7 +14,7 @@ function App() {
               src={logo}
               alt=''
             />
-            <span>By VidhyaShree</span>
+            <span>By Aries</span>
           </div>
           <div className='header'>
             <h3>3D Character Controller using Gesture Recognition</h3>
